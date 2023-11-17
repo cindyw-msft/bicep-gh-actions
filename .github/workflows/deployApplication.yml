@@ -1,13 +1,20 @@
-name: Azure ARM
+name: Deploy Toy Website
 
 on: [workflow_dispatch]
 
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ENVIRONMENT: nonprod
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     # Checkout code
-    - uses: actions/checkout@main
+    - uses: actions/checkout@v3
 
     # Log into Azure
     - uses: azure/login@v1
@@ -15,11 +22,9 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     # Deploy Bicep file
-    - name: deploy
-      uses: azure/arm-deploy@v1
+    - uses: azure/arm-deploy@v1
       with:
-        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        deploymentName: ${{ github.run_number }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
         template: ./deploy/main.bicep
-        parameters: 'storagePrefix=mystore storageSKU=Standard_LRS'
-        failOnStdErr: false
+        parameters: environmentType=${{ env.ENVIRONMENT }}
